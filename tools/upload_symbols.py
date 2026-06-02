@@ -11,7 +11,9 @@ if len(sys.argv) < 3:
   sys.stderr.write('Usage: <symbol-file> <dump-syms-cmd> <args...>\n')
   sys.exit(1)
 
-SYMBOL_SERVER = os.environ['BREAKPAD_SYMBOL_SERVER']
+SYMBOL_SERVER = os.environ.get('BREAKPAD_SYMBOL_SERVER', '').strip()
+if not SYMBOL_SERVER:
+  raise RuntimeError('BREAKPAD_SYMBOL_SERVER environment variable must be set and non-empty')
 symbol_file = sys.argv[1]
 cmd_argv = sys.argv[2:]
 
