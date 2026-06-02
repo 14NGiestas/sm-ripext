@@ -67,8 +67,13 @@ jobs:
         run: |
           mkdir build && cd build
           perl ../curl/lib/mk-ca-bundle.pl
-          python ../configure.py --enable-optimize --targets=${{ matrix.target-archs }} \
-            ${{ github.ref == 'refs/heads/main' && '--breakpad-dump --symbol-files' || '' }}
+
+          EXTRA_ARGS=""
+          if [[ "${GITHUB_REF}" == "refs/heads/main" && -n "${BREAKPAD_SYMBOL_SERVER}" ]]; then
+            EXTRA_ARGS="--breakpad-dump --symbol-files"
+          fi
+
+          python ../configure.py --enable-optimize --targets=${{ matrix.target-archs }} ${EXTRA_ARGS}
           ambuild
 
       - name: Upload artifact
