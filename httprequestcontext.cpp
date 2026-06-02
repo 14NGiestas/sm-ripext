@@ -33,6 +33,17 @@ static size_t ReadRequestBody(void *body, size_t size, size_t nmemb, void *userd
 	return to_copy;
 }
 
+static int SeekRequestBody(void *userdata, curl_off_t offset, int origin)
+{
+	HTTPRequestContext *context = (HTTPRequestContext *)userdata;
+	if (origin == SEEK_SET && offset >= 0 && (curl_off_t)(size_t)offset == offset)
+	{
+		context->pos = (size_t)offset;
+		return CURL_SEEKFUNC_OK;
+	}
+	return CURL_SEEKFUNC_CANTSEEK;
+}
+
 static size_t WriteResponseBody(void *body, size_t size, size_t nmemb, void *userdata)
 {
 	size_t total = size * nmemb;
@@ -148,6 +159,8 @@ bool HTTPRequestContext::InitCurl()
 	curl_easy_setopt(curl, CURLOPT_PRIVATE, this);
 	curl_easy_setopt(curl, CURLOPT_READDATA, this);
 	curl_easy_setopt(curl, CURLOPT_READFUNCTION, &ReadRequestBody);
+	curl_easy_setopt(curl, CURLOPT_SEEKDATA, this);
+	curl_easy_setopt(curl, CURLOPT_SEEKFUNCTION, &SeekRequestBody);
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, SM_RIPEXT_USER_AGENT);
