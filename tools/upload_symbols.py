@@ -13,7 +13,7 @@ if len(sys.argv) < 3:
 
 SYMBOL_SERVER = os.environ.get('BREAKPAD_SYMBOL_SERVER', '').strip()
 if not SYMBOL_SERVER:
-  raise RuntimeError('BREAKPAD_SYMBOL_SERVER is required when --breakpad-dump is enabled')
+  raise RuntimeError('BREAKPAD_SYMBOL_SERVER environment variable must be set and non-empty')
 symbol_file = sys.argv[1]
 cmd_argv = sys.argv[2:]
 
