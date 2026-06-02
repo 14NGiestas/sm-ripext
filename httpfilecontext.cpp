@@ -27,6 +27,16 @@ static size_t IgnoreResponseBody(void *body, size_t size, size_t nmemb, void *us
 	return size * nmemb;
 }
 
+static int SeekFile(void *userdata, curl_off_t offset, int origin)
+{
+	FILE *file = (FILE *)userdata;
+#ifdef WIN32
+	return _fseeki64(file, (__int64)offset, origin) == 0 ? CURL_SEEKFUNC_OK : CURL_SEEKFUNC_FAIL;
+#else
+	return fseeko(file, (off_t)offset, origin) == 0 ? CURL_SEEKFUNC_OK : CURL_SEEKFUNC_FAIL;
+#endif
+}
+
 HTTPFileContext::HTTPFileContext(bool isUpload, const std::string &url, const std::string &path,
 	struct curl_slist *headers, IChangeableForward *forward, cell_t value,
 	long connectTimeout, long maxRedirects, long timeout, curl_off_t maxSendSpeed, curl_off_t maxRecvSpeed,
@@ -67,6 +77,8 @@ bool HTTPFileContext::InitCurl()
 	{
 		curl_easy_setopt(curl, CURLOPT_READDATA, file);
 		curl_easy_setopt(curl, CURLOPT_READFUNCTION, fread);
+		curl_easy_setopt(curl, CURLOPT_SEEKDATA, file);
+		curl_easy_setopt(curl, CURLOPT_SEEKFUNCTION, &SeekFile);
 		curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &IgnoreResponseBody);
 		curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t) FileSize(file));
