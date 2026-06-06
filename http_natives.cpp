@@ -998,23 +998,6 @@ static cell_t GetResponseStatus(IPluginContext *pContext, const cell_t *params)
 }
 
 static cell_t GetResponseHeader(IPluginContext *pContext, const cell_t *params)
-
-static cell_t GetResponseRawBody(IPluginContext *pContext, const cell_t *params)
-{
-	HandleError err;
-	HandleSecurity sec(pContext->GetIdentity(), myself->GetIdentity());
-
-	struct HTTPResponse *response;
-	Handle_t hndlResponse = static_cast<Handle_t>(params[1]);
-	if ((err=handlesys->ReadHandle(hndlResponse, htHTTPResponse, &sec, (void **)&response)) != HandleError_None)
-	{
-		return pContext->ThrowNativeError("Invalid HTTP response handle %x (error %d)", hndlResponse, err);
-	}
-
-	pContext->StringToLocalUTF8(params[2], params[3], response->body ? response->body : "", NULL);
-
-	return 1;
-}
 {
 	HandleError err;
 	HandleSecurity sec(pContext->GetIdentity(), myself->GetIdentity());
@@ -1046,7 +1029,22 @@ static cell_t GetResponseRawBody(IPluginContext *pContext, const cell_t *params)
 	return 1;
 }
 
+static cell_t GetResponseRawBody(IPluginContext *pContext, const cell_t *params)
+{
+	HandleError err;
+	HandleSecurity sec(pContext->GetIdentity(), myself->GetIdentity());
 
+	struct HTTPResponse *response;
+	Handle_t hndlResponse = static_cast<Handle_t>(params[1]);
+	if ((err=handlesys->ReadHandle(hndlResponse, htHTTPResponse, &sec, (void **)&response)) != HandleError_None)
+	{
+		return pContext->ThrowNativeError("Invalid HTTP response handle %x (error %d)", hndlResponse, err);
+	}
+
+	pContext->StringToLocalUTF8(params[2], params[3], response->body ? response->body : "", NULL);
+
+	return 1;
+}
 const sp_nativeinfo_t http_natives[] =
 {
 	{"HTTPClient.HTTPClient",			CreateClient},
